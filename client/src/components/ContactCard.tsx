@@ -55,7 +55,22 @@ export function ContactCard({ id, name, role, company, category, whatsapp, email
           ))}
         </div>
         
-        <div className="flex gap-2">
+        {(whatsapp || email) && (
+          <div className="mb-3 space-y-1">
+            {whatsapp && (
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium">WhatsApp:</span> {whatsapp}
+              </p>
+            )}
+            {email && (
+              <p className="text-xs text-muted-foreground truncate">
+                <span className="font-medium">Email:</span> {email}
+              </p>
+            )}
+          </div>
+        )}
+        
+        <div className="flex gap-2"></div>
           {whatsapp && (
             <Button
               variant="outline"
