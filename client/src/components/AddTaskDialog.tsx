@@ -40,7 +40,7 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
       const payload = { 
         ...data, 
         createdBy: data.assignee,
-        dueDate: new Date(data.dueDate).toISOString()
+        dueDate: data.dueDate instanceof Date ? data.dueDate.toISOString() : new Date(data.dueDate).toISOString()
       };
       if (task) {
         return apiRequest<Task>(`/api/tasks/${task.id}`, {
@@ -103,6 +103,39 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
     });
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload only image files",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setFormData((prev) => ({
+          ...prev,
+          attachments: [...(prev.attachments || []), base64String],
+        }));
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData({
+      ...formData,
+      attachments: formData.attachments?.filter((_, i) => i !== index),
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -136,21 +169,21 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="assignee">Assignee</Label>
-              <Select
+              <Input
+                id="assignee"
                 value={formData.assignee}
-                onValueChange={(value) => setFormData({ ...formData, assignee: value })}
-              >
-                <SelectTrigger data-testid="select-task-assignee">
-                  <SelectValue placeholder="Select assignee" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.name}>
-                      {contact.name} - {contact.role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
+                placeholder="Enter name or select from contacts"
+                list="contacts-list"
+                required
+                data-testid="input-task-assignee"
+              />
+              <datalist id="contacts-list">
+                <option value="Me" />
+                {contacts.map((contact) => (
+                  <option key={contact.id} value={contact.name} />
+                ))}
+              </datalist>
             </div>
 
             <div>
@@ -238,6 +271,41 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+          </div>
+
+          <div>
+            <Label>Image Attachments</Label>
+            <div className="space-y-2">
+              {formData.attachments && formData.attachments.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {formData.attachments.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={image} 
+                        alt={`Attachment ${index + 1}`} 
+                        className="w-full h-24 object-cover rounded-md"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="cursor-pointer"
+              />
             </div>
           </div>
 

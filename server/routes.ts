@@ -263,7 +263,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create task
   app.post("/api/tasks", async (req, res) => {
     try {
-      const task = await storage.createTask(req.body);
+      const taskData = {
+        ...req.body,
+        dueDate: new Date(req.body.dueDate),
+      };
+      const task = await storage.createTask(taskData);
       res.status(201).json(task);
     } catch (error: any) {
       console.error("Failed to create task:", error);
@@ -275,7 +279,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/tasks/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const task = await storage.updateTask(id, req.body);
+      const updates = { ...req.body };
+      if (updates.dueDate) {
+        updates.dueDate = new Date(updates.dueDate);
+      }
+      const task = await storage.updateTask(id, updates);
       if (!task) {
         res.status(404).send({ error: "Task not found" });
         return;
