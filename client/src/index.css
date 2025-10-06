@@ -257,6 +257,32 @@
     pointer-events: none;
   }
 
+  /* Custom sidebar menu button styles */
+  [data-sidebar="menu-button"] {
+    transition: all 0.2s ease-in-out;
+  }
+
+  [data-sidebar="menu-button"]:hover {
+    transform: translateX(2px);
+  }
+
+  [data-sidebar="menu-button"][data-active="true"] {
+    background: transparent;
+    position: relative;
+  }
+
+  [data-sidebar="menu-button"][data-active="true"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: hsl(var(--primary));
+    border-radius: 0 2px 2px 0;
+  }
+
   /* .no-default-hover-elevate/no-default-active-elevate is an escape hatch so consumers of
    * buttons/badges can remove the automatic brightness adjustment on interactions
    * and program their own. */
