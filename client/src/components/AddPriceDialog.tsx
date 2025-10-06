@@ -42,9 +42,7 @@ export function AddPriceDialog({ open, onOpenChange, editPrice }: AddPriceDialog
     serviceType: editPrice?.serviceType || "",
     city: editPrice?.city || "",
     category: editPrice?.category || "",
-    supplier: editPrice?.supplier || "",
     costPrice: editPrice?.costPrice || "",
-    sellingPrice: editPrice?.sellingPrice || "",
     currency: editPrice?.currency || "USD",
     notes: editPrice?.notes || "",
   });
@@ -57,8 +55,6 @@ export function AddPriceDialog({ open, onOpenChange, editPrice }: AddPriceDialog
       const payload = {
         ...formData,
         updatedBy: "Admin User",
-        effectiveDate: new Date().toISOString(),
-        expiryDate: null,
       };
 
       if (editPrice) {
@@ -82,9 +78,7 @@ export function AddPriceDialog({ open, onOpenChange, editPrice }: AddPriceDialog
         serviceType: "",
         city: "",
         category: "",
-        supplier: "",
         costPrice: "",
-        sellingPrice: "",
         currency: "USD",
         notes: "",
       });
@@ -184,14 +178,16 @@ export function AddPriceDialog({ open, onOpenChange, editPrice }: AddPriceDialog
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supplier">Supplier / Partner *</Label>
+              <Label htmlFor="costPrice">Cost Price *</Label>
               <Input
-                id="supplier"
-                value={formData.supplier}
-                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                placeholder="e.g., Luxury Resorts Dubai"
+                id="costPrice"
+                type="number"
+                step="0.01"
+                value={formData.costPrice}
+                onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                placeholder="0.00"
                 required
-                data-testid="input-supplier"
+                data-testid="input-cost-price"
               />
             </div>
 
@@ -213,34 +209,6 @@ export function AddPriceDialog({ open, onOpenChange, editPrice }: AddPriceDialog
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="costPrice">Cost Price *</Label>
-              <Input
-                id="costPrice"
-                type="number"
-                step="0.01"
-                value={formData.costPrice}
-                onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                placeholder="0.00"
-                required
-                data-testid="input-cost-price"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sellingPrice">Selling Price *</Label>
-              <Input
-                id="sellingPrice"
-                type="number"
-                step="0.01"
-                value={formData.sellingPrice}
-                onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
-                placeholder="0.00"
-                required
-                data-testid="input-selling-price"
-              />
             </div>
           </div>
 

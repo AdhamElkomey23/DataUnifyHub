@@ -54,8 +54,7 @@ export default function Prices() {
       const searchLower = search.toLowerCase();
       matches = matches && (
         price.serviceName.toLowerCase().includes(searchLower) ||
-        price.city.toLowerCase().includes(searchLower) ||
-        price.supplier.toLowerCase().includes(searchLower)
+        price.city.toLowerCase().includes(searchLower)
       );
     }
     
@@ -110,16 +109,14 @@ export default function Prices() {
 
   const handleExport = () => {
     const csv = [
-      ["ID", "Service Name", "City", "Type", "Category", "Supplier", "Cost Price", "Selling Price", "Currency", "Updated By", "Last Updated", "Notes"],
+      ["ID", "Service Name", "City", "Type", "Category", "Cost Price", "Currency", "Updated By", "Last Updated", "Notes"],
       ...filteredPrices.map(p => [
         p.id,
         p.serviceName,
         p.city,
         p.serviceType,
         p.category,
-        p.supplier,
         p.costPrice,
-        p.sellingPrice,
         p.currency,
         p.updatedBy,
         new Date(p.updatedAt).toLocaleDateString(),
@@ -166,7 +163,7 @@ export default function Prices() {
       </div>
 
       <FilterBar
-        searchPlaceholder="Search services, cities, or suppliers..."
+        searchPlaceholder="Search services or cities..."
         onSearch={setSearch}
         filters={[
           {
@@ -212,9 +209,7 @@ export default function Prices() {
                   <TableHead className="font-medium text-xs uppercase tracking-wide">City</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wide">Type</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wide">Category</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wide">Supplier</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wide">Cost</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wide">Selling</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wide">Cost Price</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wide">Updated By</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wide">Last Updated</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wide text-right">Actions</TableHead>
@@ -223,7 +218,7 @@ export default function Prices() {
               <TableBody>
                 {filteredPrices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                       No prices found matching your filters
                     </TableCell>
                   </TableRow>
@@ -256,12 +251,8 @@ export default function Prices() {
                       <TableCell>
                         <Badge variant="secondary">{price.category}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{price.supplier}</TableCell>
                       <TableCell className="font-mono font-medium">
                         {price.currency} {Number(price.costPrice).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="font-mono font-medium text-primary">
-                        {price.currency} {Number(price.sellingPrice).toFixed(2)}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{price.updatedBy}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">

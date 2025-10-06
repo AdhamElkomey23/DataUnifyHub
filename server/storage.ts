@@ -18,7 +18,6 @@ export interface IStorage {
     city?: string;
     serviceType?: string;
     category?: string;
-    supplier?: string;
   }): Promise<Price[]>;
   getPriceById(id: number): Promise<Price | undefined>;
   createPrice(price: InsertPrice): Promise<Price>;
@@ -56,12 +55,8 @@ export class MemStorage implements IStorage {
         serviceType: "Hotel",
         city: "Dubai",
         category: "Luxury",
-        supplier: "Luxury Resorts Dubai",
         costPrice: "400.00",
-        sellingPrice: "450.00",
         currency: "USD",
-        effectiveDate: daysAgo(10),
-        expiryDate: null,
         notes: "Includes breakfast and airport transfer",
         updatedBy: "Sarah Chen",
         updatedAt: daysAgo(2),
@@ -72,12 +67,8 @@ export class MemStorage implements IStorage {
         serviceType: "Guide",
         city: "Cairo",
         category: "Standard",
-        supplier: "Cairo Tours Ltd",
         costPrice: "100.00",
-        sellingPrice: "120.00",
         currency: "USD",
-        effectiveDate: daysAgo(5),
-        expiryDate: null,
         notes: "English speaking, licensed guide",
         updatedBy: "Mike Ross",
         updatedAt: daysAgo(1),
@@ -88,12 +79,8 @@ export class MemStorage implements IStorage {
         serviceType: "Vehicle",
         city: "Dubai",
         category: "Deluxe",
-        supplier: "Premium Transport",
         costPrice: "250.00",
-        sellingPrice: "280.00",
         currency: "USD",
-        effectiveDate: daysAgo(8),
-        expiryDate: null,
         notes: "Includes driver and fuel, 8 hours",
         updatedBy: "Alex Kim",
         updatedAt: daysAgo(3),
@@ -104,12 +91,8 @@ export class MemStorage implements IStorage {
         serviceType: "Ticket",
         city: "Aswan",
         category: "Standard",
-        supplier: "Ministry of Tourism",
         costPrice: "40.00",
-        sellingPrice: "45.00",
         currency: "USD",
-        effectiveDate: daysAgo(100),
-        expiryDate: null,
         notes: "Price may change seasonally",
         updatedBy: "Sarah Chen",
         updatedAt: daysAgo(95),
@@ -120,12 +103,8 @@ export class MemStorage implements IStorage {
         serviceType: "Cruise",
         city: "Luxor",
         category: "Luxury",
-        supplier: "Nile Cruises International",
         costPrice: "650.00",
-        sellingPrice: "750.00",
         currency: "USD",
-        effectiveDate: daysAgo(15),
-        expiryDate: null,
         notes: "Full board, guided excursions included",
         updatedBy: "Mike Ross",
         updatedAt: daysAgo(4),
@@ -161,7 +140,6 @@ export class MemStorage implements IStorage {
     city?: string;
     serviceType?: string;
     category?: string;
-    supplier?: string;
   }): Promise<Price[]> {
     let prices = Array.from(this.prices.values());
 
@@ -171,8 +149,7 @@ export class MemStorage implements IStorage {
         prices = prices.filter(
           (p) =>
             p.serviceName.toLowerCase().includes(search) ||
-            p.city.toLowerCase().includes(search) ||
-            p.supplier.toLowerCase().includes(search)
+            p.city.toLowerCase().includes(search)
         );
       }
 
@@ -187,10 +164,6 @@ export class MemStorage implements IStorage {
       if (filters.category && filters.category !== "all") {
         prices = prices.filter((p) => p.category.toLowerCase() === filters.category!.toLowerCase());
       }
-
-      if (filters.supplier && filters.supplier !== "all") {
-        prices = prices.filter((p) => p.supplier === filters.supplier);
-      }
     }
 
     return prices.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
@@ -203,8 +176,6 @@ export class MemStorage implements IStorage {
   async createPrice(insertPrice: InsertPrice): Promise<Price> {
     const id = this.priceIdCounter++;
     const now = new Date();
-    const effectiveDate = insertPrice.effectiveDate ? new Date(insertPrice.effectiveDate) : now;
-    const expiryDate = insertPrice.expiryDate ? new Date(insertPrice.expiryDate) : null;
     
     const price: Price = {
       id,
@@ -212,12 +183,8 @@ export class MemStorage implements IStorage {
       serviceType: insertPrice.serviceType!,
       city: insertPrice.city!,
       category: insertPrice.category!,
-      supplier: insertPrice.supplier!,
       costPrice: insertPrice.costPrice!,
-      sellingPrice: insertPrice.sellingPrice!,
       currency: insertPrice.currency || "USD",
-      effectiveDate,
-      expiryDate,
       notes: insertPrice.notes || null,
       updatedBy: insertPrice.updatedBy!,
       updatedAt: now,

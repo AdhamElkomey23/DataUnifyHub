@@ -8,13 +8,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/prices", async (req, res) => {
     try {
-      const { search, city, serviceType, category, supplier } = req.query;
+      const { search, city, serviceType, category } = req.query;
       const prices = await storage.getPrices({
         search: search as string,
         city: city as string,
         serviceType: serviceType as string,
         category: category as string,
-        supplier: supplier as string,
       });
       res.json(prices);
     } catch (error) {
