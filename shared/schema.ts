@@ -79,6 +79,8 @@ export const tasks = pgTable("tasks", {
   dueDate: timestamp("due_date").notNull(),
   priority: text("priority").notNull(),
   status: text("status").notNull().default("todo"),
+  relatedUrls: text("related_urls").array(),
+  attachments: text("attachments").array(),
   createdBy: text("created_by").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

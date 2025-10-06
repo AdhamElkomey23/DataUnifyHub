@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Task, InsertTask } from "@shared/schema";
+import { X, Plus } from "lucide-react";
+import type { Task, InsertTask, Contact } from "@shared/schema";
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -25,11 +26,22 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
     dueDate: task?.dueDate ? new Date(task.dueDate) : new Date(),
     priority: task?.priority || "medium",
     status: task?.status || "todo",
+    relatedUrls: task?.relatedUrls || [],
+    attachments: task?.attachments || [],
+  });
+  const [newUrl, setNewUrl] = useState("");
+
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
   });
 
   const mutation = useMutation({
     mutationFn: async (data: Omit<InsertTask, 'createdBy'>) => {
-      const payload = { ...data, createdBy: data.assignee };
+      const payload = { 
+        ...data, 
+        createdBy: data.assignee,
+        dueDate: new Date(data.dueDate).toISOString()
+      };
       if (task) {
         return apiRequest<Task>(`/api/tasks/${task.id}`, {
           method: "PATCH",
@@ -54,8 +66,11 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
         assignee: "", 
         dueDate: new Date(), 
         priority: "medium", 
-        status: "todo" 
+        status: "todo",
+        relatedUrls: [],
+        attachments: [],
       });
+      setNewUrl("");
     },
     onError: (error: Error) => {
       toast({
@@ -71,9 +86,26 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
     mutation.mutate(formData);
   };
 
+  const handleAddUrl = () => {
+    if (newUrl.trim()) {
+      setFormData({ 
+        ...formData, 
+        relatedUrls: [...(formData.relatedUrls || []), newUrl.trim()] 
+      });
+      setNewUrl("");
+    }
+  };
+
+  const handleRemoveUrl = (index: number) => {
+    setFormData({ 
+      ...formData, 
+      relatedUrls: formData.relatedUrls?.filter((_, i) => i !== index) 
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task ? "Edit Task" : "Create New Task"}</DialogTitle>
         </DialogHeader>
@@ -104,13 +136,21 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="assignee">Assignee</Label>
-              <Input
-                id="assignee"
+              <Select
                 value={formData.assignee}
-                onChange={(e) => setFormData({ ...formData, assignee: e.target.value })}
-                required
-                data-testid="input-task-assignee"
-              />
+                onValueChange={(value) => setFormData({ ...formData, assignee: value })}
+              >
+                <SelectTrigger data-testid="select-task-assignee">
+                  <SelectValue placeholder="Select assignee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={contact.name}>
+                      {contact.name} - {contact.role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -159,6 +199,45 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
                   <SelectItem value="done">Done</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label>Related URLs</Label>
+            <div className="space-y-2">
+              {formData.relatedUrls && formData.relatedUrls.length > 0 && (
+                <div className="space-y-2">
+                  {formData.relatedUrls.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input value={url} readOnly className="flex-1" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveUrl(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Input
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddUrl();
+                    }
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={handleAddUrl}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 
