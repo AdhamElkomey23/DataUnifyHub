@@ -80,13 +80,17 @@ export default function Tasks() {
     // Add a slight delay to allow the drag ghost to render
     setTimeout(() => {
       const target = e.currentTarget as HTMLElement;
-      target.style.opacity = "0.5";
+      if (target) {
+        target.style.opacity = "0.5";
+      }
     }, 0);
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
     const target = e.currentTarget as HTMLElement;
-    target.style.opacity = "1";
+    if (target) {
+      target.style.opacity = "1";
+    }
     setDraggedTaskId(null);
     setDragOverColumn(null);
     
