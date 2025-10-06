@@ -154,16 +154,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete contact
   app.delete("/api/contacts/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteContact(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Contact not found" });
-      }
+      await storage.deleteContact(id);
       res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: "Failed to delete contact" });
+    } catch (error: any) {
+      console.error("Failed to delete contact:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Get all articles
+  app.get("/api/articles", async (_req, res) => {
+    try {
+      const articles = await storage.getArticles();
+      res.json(articles);
+    } catch (error: any) {
+      console.error("Failed to fetch articles:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Get single article
+  app.get("/api/articles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const article = await storage.getArticle(id);
+      if (!article) {
+        res.status(404).send({ error: "Article not found" });
+        return;
+      }
+      res.json(article);
+    } catch (error: any) {
+      console.error("Failed to fetch article:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Create article
+  app.post("/api/articles", async (req, res) => {
+    try {
+      const article = await storage.createArticle(req.body);
+      res.status(201).json(article);
+    } catch (error: any) {
+      console.error("Failed to create article:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Update article
+  app.put("/api/articles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const article = await storage.updateArticle(id, req.body);
+      res.json(article);
+    } catch (error: any) {
+      console.error("Failed to update article:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Delete article
+  app.delete("/api/articles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteArticle(id);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Failed to delete article:", error);
+      res.status(500).send({ error: error.message });
     }
   });
 

@@ -7,14 +7,20 @@ import {
   type InsertPriceHistory,
   type Contact,
   type InsertContact,
+  type Article,
+  type InsertArticle
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { prices, priceHistory, contacts, articles } from "./db";
+import type { InsertPrice, InsertPriceHistory, InsertContact, InsertArticle } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getPrices(filters?: {
     search?: string;
     city?: string;
@@ -25,15 +31,21 @@ export interface IStorage {
   createPrice(price: InsertPrice): Promise<Price>;
   updatePrice(id: number, price: Partial<InsertPrice>): Promise<Price | undefined>;
   deletePrice(id: number): Promise<boolean>;
-  
+
   getPriceHistory(priceId: number): Promise<PriceHistory[]>;
   createPriceHistory(history: InsertPriceHistory): Promise<PriceHistory>;
-  
+
   getContacts(): Promise<Contact[]>;
   getContactById(id: number): Promise<Contact | undefined>;
   createContact(contact: InsertContact): Promise<Contact>;
   updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
   deleteContact(id: number): Promise<boolean>;
+
+  getArticles(): Promise<Article[]>;
+  getArticle(id: number): Promise<Article | undefined>;
+  createArticle(article: InsertArticle): Promise<Article>;
+  updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined>;
+  deleteArticle(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -53,14 +65,14 @@ export class MemStorage implements IStorage {
     this.priceIdCounter = 1;
     this.historyIdCounter = 1;
     this.contactIdCounter = 1;
-    
+
     this.seedInitialData();
   }
 
   private seedInitialData() {
     const now = new Date();
     const daysAgo = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    
+
     const initialPrices: Omit<Price, 'id'>[] = [
       {
         serviceName: "Luxury Hotel - 5 Star",
@@ -188,7 +200,7 @@ export class MemStorage implements IStorage {
   async createPrice(insertPrice: InsertPrice): Promise<Price> {
     const id = this.priceIdCounter++;
     const now = new Date();
-    
+
     const price: Price = {
       id,
       serviceName: insertPrice.serviceName!,
@@ -257,7 +269,7 @@ export class MemStorage implements IStorage {
   async createContact(insertContact: InsertContact): Promise<Contact> {
     const id = this.contactIdCounter++;
     const now = new Date();
-    
+
     const contact: Contact = {
       id,
       name: insertContact.name,
@@ -289,9 +301,35 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async deleteContact(id: number): Promise<boolean> {
-    return this.contacts.delete(id);
-  }
-}
+  async deleteContact(id: number) {
+    await db.delete(contacts).where(eq(contacts.id, id));
+  },
+
+  async getArticles() {
+    return await db.select().from(articles).orderBy(articles.updatedAt);
+  },
+
+  async getArticle(id: number) {
+    const result = await db.select().from(articles).where(eq(articles.id, id));
+    return result[0];
+  },
+
+  async createArticle(article: InsertArticle) {
+    const result = await db.insert(articles).values(article).returning();
+    return result[0];
+  },
+
+  async updateArticle(id: number, article: Partial<InsertArticle>) {
+    const result = await db.update(articles)
+      .set({ ...article, updatedAt: new Date() })
+      .where(eq(articles.id, id))
+      .returning();
+    return result[0];
+  },
+
+  async deleteArticle(id: number) {
+    await db.delete(articles).where(eq(articles.id, id));
+  },
+};
 
 export const storage = new MemStorage();
