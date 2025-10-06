@@ -67,9 +67,26 @@ export default function Tasks() {
     setDialogOpen(true);
   };
 
+  const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("taskId", task.id.toString());
+    setDraggedTaskId(task.id);
+    
+    // Add a slight delay to allow the drag ghost to render
+    setTimeout(() => {
+      const target = e.currentTarget as HTMLElement;
+      target.style.opacity = "0.5";
+    }, 0);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = "1";
+    setDraggedTaskId(null);
+    setDragOverColumn(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -77,10 +94,25 @@ export default function Tasks() {
     e.dataTransfer.dropEffect = "move";
   };
 
+  const handleDragEnter = (status: string) => {
+    setDragOverColumn(status);
+  };
+
+  const handleDragLeave = (e: React.DragEvent, status: string) => {
+    // Only clear if leaving the column container itself
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    const currentTarget = e.currentTarget as HTMLElement;
+    if (!currentTarget.contains(relatedTarget)) {
+      setDragOverColumn(null);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent, newStatus: string) => {
     e.preventDefault();
     const taskId = parseInt(e.dataTransfer.getData("taskId"));
     const task = tasks.find(t => t.id === taskId);
+    
+    setDragOverColumn(null);
     
     if (task && task.status !== newStatus) {
       updateTaskMutation.mutate({
@@ -174,7 +206,12 @@ export default function Tasks() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card
             onDragOver={handleDragOver}
+            onDragEnter={() => handleDragEnter("todo")}
+            onDragLeave={(e) => handleDragLeave(e, "todo")}
             onDrop={(e) => handleDrop(e, "todo")}
+            className={`transition-colors duration-200 ${
+              dragOverColumn === "todo" ? 'ring-2 ring-primary bg-accent/5' : ''
+            }`}
           >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
@@ -184,14 +221,17 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 min-h-[200px]">
+            <CardContent className="space-y-3 min-h-[200px] transition-all duration-200">
               {tasksByStatus.todo.map(task => (
                 <div 
                   key={task.id} 
                   onClick={() => handleTaskClick(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
-                  className="cursor-move"
+                  onDragEnd={handleDragEnd}
+                  className={`cursor-move transition-all duration-200 ${
+                    draggedTaskId === task.id ? 'opacity-50 scale-95' : ''
+                  }`}
                 >
                   <TaskItem 
                     title={task.title}
@@ -207,7 +247,12 @@ export default function Tasks() {
 
           <Card
             onDragOver={handleDragOver}
+            onDragEnter={() => handleDragEnter("in-progress")}
+            onDragLeave={(e) => handleDragLeave(e, "in-progress")}
             onDrop={(e) => handleDrop(e, "in-progress")}
+            className={`transition-colors duration-200 ${
+              dragOverColumn === "in-progress" ? 'ring-2 ring-primary bg-accent/5' : ''
+            }`}
           >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
@@ -217,14 +262,17 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 min-h-[200px]">
+            <CardContent className="space-y-3 min-h-[200px] transition-all duration-200">
               {tasksByStatus["in-progress"].map(task => (
                 <div 
                   key={task.id} 
                   onClick={() => handleTaskClick(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
-                  className="cursor-move"
+                  onDragEnd={handleDragEnd}
+                  className={`cursor-move transition-all duration-200 ${
+                    draggedTaskId === task.id ? 'opacity-50 scale-95' : ''
+                  }`}
                 >
                   <TaskItem 
                     title={task.title}
@@ -240,7 +288,12 @@ export default function Tasks() {
 
           <Card
             onDragOver={handleDragOver}
+            onDragEnter={() => handleDragEnter("done")}
+            onDragLeave={(e) => handleDragLeave(e, "done")}
             onDrop={(e) => handleDrop(e, "done")}
+            className={`transition-colors duration-200 ${
+              dragOverColumn === "done" ? 'ring-2 ring-primary bg-accent/5' : ''
+            }`}
           >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
@@ -250,14 +303,17 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 min-h-[200px]">
+            <CardContent className="space-y-3 min-h-[200px] transition-all duration-200">
               {tasksByStatus.done.map(task => (
                 <div 
                   key={task.id} 
                   onClick={() => handleTaskClick(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
-                  className="cursor-move"
+                  onDragEnd={handleDragEnd}
+                  className={`cursor-move transition-all duration-200 ${
+                    draggedTaskId === task.id ? 'opacity-50 scale-95' : ''
+                  }`}
                 >
                   <TaskItem 
                     title={task.title}
