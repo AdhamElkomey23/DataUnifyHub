@@ -7,13 +7,15 @@ import {
   type InsertPriceHistory,
   type Contact,
   type InsertContact,
-  type Article,
-  type InsertArticle
+  type KnowledgeArticle,
+  type InsertKnowledgeArticle,
+  prices,
+  priceHistory,
+  contacts,
+  knowledgeArticles
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { prices, priceHistory, contacts, articles } from "./db";
-import type { InsertPrice, InsertPriceHistory, InsertContact, InsertArticle } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -41,10 +43,10 @@ export interface IStorage {
   updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
   deleteContact(id: number): Promise<boolean>;
 
-  getArticles(): Promise<Article[]>;
-  getArticle(id: number): Promise<Article | undefined>;
-  createArticle(article: InsertArticle): Promise<Article>;
-  updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined>;
+  getArticles(): Promise<KnowledgeArticle[]>;
+  getArticle(id: number): Promise<KnowledgeArticle | undefined>;
+  createArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle>;
+  updateArticle(id: number, article: Partial<InsertKnowledgeArticle>): Promise<KnowledgeArticle | undefined>;
   deleteArticle(id: number): Promise<boolean>;
 }
 
@@ -306,33 +308,32 @@ export class MemStorage implements IStorage {
     return true;
   }
 
-  async getArticles(): Promise<Article[]> {
-    return await db.select().from(articles).orderBy(articles.updatedAt);
+  async getArticles(): Promise<KnowledgeArticle[]> {
+    return await db.select().from(knowledgeArticles).orderBy(knowledgeArticles.updatedAt);
   }
 
-  async getArticle(id: number): Promise<Article | undefined> {
-    const result = await db.select().from(articles).where(eq(articles.id, id));
+  async getArticle(id: number): Promise<KnowledgeArticle | undefined> {
+    const result = await db.select().from(knowledgeArticles).where(eq(knowledgeArticles.id, id));
     return result[0];
   }
 
-  async createArticle(article: InsertArticle): Promise<Article> {
-    const result = await db.insert(articles).values(article).returning();
+  async createArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle> {
+    const result = await db.insert(knowledgeArticles).values(article).returning();
     return result[0];
   }
 
-  async updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined> {
-    const result = await db.update(articles)
+  async updateArticle(id: number, article: Partial<InsertKnowledgeArticle>): Promise<KnowledgeArticle | undefined> {
+    const result = await db.update(knowledgeArticles)
       .set({ ...article, updatedAt: new Date() })
-      .where(eq(articles.id, id))
+      .where(eq(knowledgeArticles.id, id))
       .returning();
     return result[0];
   }
 
   async deleteArticle(id: number): Promise<boolean> {
-    await db.delete(articles).where(eq(articles.id, id));
+    await db.delete(knowledgeArticles).where(eq(knowledgeArticles.id, id));
     return true;
   }
-
-  }
+}
 
 export const storage = new MemStorage();
