@@ -1,29 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { TaskItem } from "@/components/TaskItem";
 import { FilterBar } from "@/components/FilterBar";
 import { Button } from "@/components/ui/button";
 import { Plus, Kanban, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { TaskDetailDialog } from "@/components/TaskDetailDialog";
+import { TaskSummaryWidget } from "@/components/TaskSummaryWidget";
 import { queryClient } from "@/lib/queryClient";
 import type { Task } from "@shared/schema";
+
+const CURRENT_USER = "Islam";
 
 export default function Tasks() {
   const [priority, setPriority] = useState("all");
   const [status, setStatus] = useState("all");
+  const [department, setDepartment] = useState("all");
+  const [createdBy, setCreatedBy] = useState("all");
+  const [dueDate, setDueDate] = useState("all");
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"kanban" | "list">("kanban");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showMyTasksOnly, setShowMyTasksOnly] = useState(() => {
+    const saved = localStorage.getItem("showMyTasksOnly");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("showMyTasksOnly", String(showMyTasksOnly));
+  }, [showMyTasksOnly]);
 
   const { data: tasks = [] } = useQuery<Task[]>({
-    queryKey: ["/api/tasks", { search, status, priority }],
+    queryKey: ["/api/tasks", { search, status, priority, department, createdBy, dueDate, assignee: showMyTasksOnly ? CURRENT_USER : undefined }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
       if (status !== "all") params.append("status", status);
       if (priority !== "all") params.append("priority", priority);
+      if (department !== "all") params.append("department", department);
+      if (createdBy !== "all") params.append("createdBy", createdBy);
+      if (dueDate !== "all") params.append("dueDate", dueDate);
+      if (showMyTasksOnly) params.append("assignee", CURRENT_USER);
       
       const res = await fetch(`/api/tasks?${params.toString()}`, {
         credentials: "include",
@@ -59,12 +81,12 @@ export default function Tasks() {
 
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
-    setDialogOpen(true);
+    setDetailDialogOpen(true);
   };
 
   const handleCreateClick = () => {
-    setSelectedTask(undefined);
-    setDialogOpen(true);
+    setSelectedTask(null);
+    setCreateDialogOpen(true);
   };
 
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
@@ -142,7 +164,9 @@ export default function Tasks() {
   const tasksByStatus = {
     todo: tasks.filter(t => t.status === "todo"),
     "in-progress": tasks.filter(t => t.status === "in-progress"),
+    "waiting-for-review": tasks.filter(t => t.status === "waiting-for-review"),
     done: tasks.filter(t => t.status === "done"),
+    cancelled: tasks.filter(t => t.status === "cancelled"),
   };
 
   const formatDueDate = (date: Date | string) => {
@@ -161,39 +185,67 @@ export default function Tasks() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-semibold mb-2">Task Management</h1>
+          <h1 className="text-3xl font-semibold mb-2">Team Tasks</h1>
           <p className="text-muted-foreground">Track and manage team tasks</p>
         </div>
-        <div className="flex gap-2">
-          <div className="flex border rounded-md">
-            <Button
-              variant={view === "kanban" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setView("kanban")}
-              data-testid="button-view-kanban"
-            >
-              <Kanban className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={view === "list" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setView("list")}
-              data-testid="button-view-list"
-            >
-              <List className="h-4 w-4" />
+        <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="my-tasks-toggle"
+              checked={showMyTasksOnly}
+              onCheckedChange={setShowMyTasksOnly}
+              data-testid="switch-my-tasks"
+            />
+            <Label htmlFor="my-tasks-toggle" className="cursor-pointer">
+              {showMyTasksOnly ? "My Tasks Only" : "All Tasks"}
+            </Label>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex border rounded-md">
+              <Button
+                variant={view === "kanban" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setView("kanban")}
+                data-testid="button-view-kanban"
+              >
+                <Kanban className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === "list" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setView("list")}
+                data-testid="button-view-list"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button onClick={handleCreateClick} data-testid="button-create-task">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Task
             </Button>
           </div>
-          <Button onClick={handleCreateClick} data-testid="button-create-task">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Task
-          </Button>
         </div>
       </div>
+
+      <TaskSummaryWidget tasks={tasks} currentUser={CURRENT_USER} />
 
       <FilterBar
         searchPlaceholder="Search tasks..."
         onSearch={setSearch}
         filters={[
+          {
+            label: "Status",
+            value: status,
+            onChange: setStatus,
+            options: [
+              { value: "all", label: "All Statuses" },
+              { value: "todo", label: "To Do" },
+              { value: "in-progress", label: "In Progress" },
+              { value: "waiting-for-review", label: "Waiting for Review" },
+              { value: "done", label: "Done" },
+              { value: "cancelled", label: "Cancelled" },
+            ],
+          },
           {
             label: "Priority",
             value: priority,
@@ -206,14 +258,37 @@ export default function Tasks() {
             ],
           },
           {
-            label: "Status",
-            value: status,
-            onChange: setStatus,
+            label: "Department",
+            value: department,
+            onChange: setDepartment,
             options: [
-              { value: "all", label: "All Statuses" },
-              { value: "todo", label: "To Do" },
-              { value: "in-progress", label: "In Progress" },
-              { value: "done", label: "Done" },
+              { value: "all", label: "All Departments" },
+              { value: "Sales", label: "Sales" },
+              { value: "Operations", label: "Operations" },
+              { value: "Marketing", label: "Marketing" },
+              { value: "Accounting", label: "Accounting" },
+            ],
+          },
+          {
+            label: "Created By",
+            value: createdBy,
+            onChange: setCreatedBy,
+            options: [
+              { value: "all", label: "All Creators" },
+              { value: "Islam", label: "Islam" },
+              { value: "Zeina", label: "Zeina" },
+              { value: "Ahmed", label: "Ahmed" },
+            ],
+          },
+          {
+            label: "Due Date",
+            value: dueDate,
+            onChange: setDueDate,
+            options: [
+              { value: "all", label: "All Due Dates" },
+              { value: "today", label: "Today" },
+              { value: "this-week", label: "This Week" },
+              { value: "overdue", label: "Overdue" },
             ],
           },
         ]}
@@ -255,7 +330,7 @@ export default function Tasks() {
                     assignee={task.assignee}
                     dueDate={formatDueDate(task.dueDate)}
                     priority={task.priority as "high" | "medium" | "low"}
-                    status={task.status as "todo" | "in-progress" | "done"}
+                    status={task.status as "todo" | "in-progress" | "waiting-for-review" | "done" | "cancelled"}
                   />
                 </div>
               ))}
@@ -296,7 +371,7 @@ export default function Tasks() {
                     assignee={task.assignee}
                     dueDate={formatDueDate(task.dueDate)}
                     priority={task.priority as "high" | "medium" | "low"}
-                    status={task.status as "todo" | "in-progress" | "done"}
+                    status={task.status as "todo" | "in-progress" | "waiting-for-review" | "done" | "cancelled"}
                   />
                 </div>
               ))}
@@ -337,7 +412,7 @@ export default function Tasks() {
                     assignee={task.assignee}
                     dueDate={formatDueDate(task.dueDate)}
                     priority={task.priority as "high" | "medium" | "low"}
-                    status={task.status as "todo" | "in-progress" | "done"}
+                    status={task.status as "todo" | "in-progress" | "waiting-for-review" | "done" | "cancelled"}
                   />
                 </div>
               ))}
@@ -361,9 +436,15 @@ export default function Tasks() {
       )}
 
       <AddTaskDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        task={selectedTask || undefined}
+      />
+
+      <TaskDetailDialog
         task={selectedTask}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
       />
     </div>
   );

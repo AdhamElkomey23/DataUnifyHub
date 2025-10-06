@@ -11,11 +11,17 @@ import {
   type InsertKnowledgeArticle,
   type Task,
   type InsertTask,
+  type TaskComment,
+  type InsertTaskComment,
+  type TaskActivityLog,
+  type InsertTaskActivityLog,
   prices,
   priceHistory,
   contacts,
   knowledgeArticles,
-  tasks
+  tasks,
+  taskComments,
+  taskActivityLog
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -52,11 +58,25 @@ export interface IStorage {
   updateArticle(id: number, article: Partial<InsertKnowledgeArticle>): Promise<KnowledgeArticle | undefined>;
   deleteArticle(id: number): Promise<boolean>;
 
-  getTasks(filters?: { search?: string; status?: string; priority?: string }): Promise<Task[]>;
+  getTasks(filters?: { 
+    search?: string; 
+    status?: string; 
+    priority?: string; 
+    assignee?: string;
+    department?: string;
+    createdBy?: string;
+    dueDate?: string;
+  }): Promise<Task[]>;
   getTask(id: number): Promise<Task | undefined>;
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+
+  getTaskComments(taskId: number): Promise<TaskComment[]>;
+  createTaskComment(comment: InsertTaskComment): Promise<TaskComment>;
+
+  getTaskActivityLog(taskId: number): Promise<TaskActivityLog[]>;
+  createTaskActivityLog(log: InsertTaskActivityLog): Promise<TaskActivityLog>;
 }
 
 export class MemStorage implements IStorage {
@@ -344,7 +364,15 @@ export class MemStorage implements IStorage {
     return true;
   }
 
-  async getTasks(filters?: { search?: string; status?: string; priority?: string }): Promise<Task[]> {
+  async getTasks(filters?: { 
+    search?: string; 
+    status?: string; 
+    priority?: string;
+    assignee?: string;
+    department?: string;
+    createdBy?: string;
+    dueDate?: string;
+  }): Promise<Task[]> {
     let query = db.select().from(tasks);
     const result = await query;
     
@@ -353,7 +381,9 @@ export class MemStorage implements IStorage {
     if (filters?.search) {
       const search = filters.search.toLowerCase();
       filteredTasks = filteredTasks.filter(
-        (t) => t.title.toLowerCase().includes(search) || t.assignee.toLowerCase().includes(search)
+        (t) => t.title.toLowerCase().includes(search) || 
+               t.assignee.toLowerCase().includes(search) ||
+               (t.description && t.description.toLowerCase().includes(search))
       );
     }
     
@@ -363,6 +393,41 @@ export class MemStorage implements IStorage {
     
     if (filters?.priority && filters.priority !== "all") {
       filteredTasks = filteredTasks.filter((t) => t.priority === filters.priority);
+    }
+
+    if (filters?.assignee && filters.assignee !== "all") {
+      filteredTasks = filteredTasks.filter((t) => t.assignee === filters.assignee);
+    }
+
+    if (filters?.department && filters.department !== "all") {
+      filteredTasks = filteredTasks.filter((t) => t.department === filters.department);
+    }
+
+    if (filters?.createdBy && filters.createdBy !== "all") {
+      filteredTasks = filteredTasks.filter((t) => t.createdBy === filters.createdBy);
+    }
+
+    if (filters?.dueDate) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const weekFromNow = new Date(today);
+      weekFromNow.setDate(weekFromNow.getDate() + 7);
+
+      filteredTasks = filteredTasks.filter((t) => {
+        const dueDate = new Date(t.dueDate);
+        const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+        if (filters.dueDate === "today") {
+          return dueDateOnly.getTime() === today.getTime();
+        } else if (filters.dueDate === "this-week") {
+          return dueDateOnly >= today && dueDateOnly <= weekFromNow;
+        } else if (filters.dueDate === "overdue") {
+          return dueDateOnly < today;
+        }
+        return true;
+      });
     }
     
     return filteredTasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -389,6 +454,26 @@ export class MemStorage implements IStorage {
   async deleteTask(id: number): Promise<boolean> {
     await db.delete(tasks).where(eq(tasks.id, id));
     return true;
+  }
+
+  async getTaskComments(taskId: number): Promise<TaskComment[]> {
+    const result = await db.select().from(taskComments).where(eq(taskComments.taskId, taskId));
+    return result.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async createTaskComment(comment: InsertTaskComment): Promise<TaskComment> {
+    const result = await db.insert(taskComments).values(comment).returning();
+    return result[0];
+  }
+
+  async getTaskActivityLog(taskId: number): Promise<TaskActivityLog[]> {
+    const result = await db.select().from(taskActivityLog).where(eq(taskActivityLog.taskId, taskId));
+    return result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createTaskActivityLog(log: InsertTaskActivityLog): Promise<TaskActivityLog> {
+    const result = await db.insert(taskActivityLog).values(log).returning();
+    return result[0];
   }
 }
 

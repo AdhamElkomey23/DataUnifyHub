@@ -79,6 +79,8 @@ export const tasks = pgTable("tasks", {
   dueDate: timestamp("due_date").notNull(),
   priority: text("priority").notNull(),
   status: text("status").notNull().default("todo"),
+  department: text("department"),
+  notes: text("notes"),
   relatedUrls: text("related_urls").array(),
   attachments: text("attachments").array(),
   createdBy: text("created_by").notNull(),
@@ -90,6 +92,35 @@ export const insertTaskSchema = createInsertSchema(tasks);
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+export const taskComments = pgTable("task_comments", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  username: text("username").notNull(),
+  comment: text("comment").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTaskCommentSchema = createInsertSchema(taskComments);
+
+export type InsertTaskComment = z.infer<typeof insertTaskCommentSchema>;
+export type TaskComment = typeof taskComments.$inferSelect;
+
+export const taskActivityLog = pgTable("task_activity_log", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  taskId: integer("task_id").notNull().references(() => tasks.id, { onDelete: "cascade" }),
+  username: text("username").notNull(),
+  action: text("action").notNull(),
+  field: text("field"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertTaskActivityLogSchema = createInsertSchema(taskActivityLog);
+
+export type InsertTaskActivityLog = z.infer<typeof insertTaskActivityLogSchema>;
+export type TaskActivityLog = typeof taskActivityLog.$inferSelect;
 
 export const knowledgeArticles = pgTable("knowledge_articles", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),

@@ -7,25 +7,29 @@ interface TaskItemProps {
   assignee: string;
   dueDate: string;
   priority: "high" | "medium" | "low";
-  status: "todo" | "in-progress" | "done";
+  status: "todo" | "in-progress" | "waiting-for-review" | "done" | "cancelled";
 }
 
 const priorityColors = {
-  high: "border-l-destructive",
-  medium: "border-l-chart-4",
-  low: "border-l-muted-foreground",
+  high: "border-l-red-500",
+  medium: "border-l-orange-500",
+  low: "border-l-green-500",
 };
 
 const statusColors = {
-  todo: "bg-muted/50 text-muted-foreground",
-  "in-progress": "bg-primary/20 text-primary",
-  done: "bg-chart-2/20 text-chart-2",
+  todo: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400",
+  "in-progress": "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  "waiting-for-review": "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
+  done: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+  cancelled: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
 };
 
 const statusLabels = {
   todo: "To Do",
   "in-progress": "In Progress",
+  "waiting-for-review": "Waiting for Review",
   done: "Done",
+  cancelled: "Cancelled",
 };
 
 export function TaskItem({ title, assignee, dueDate, priority, status }: TaskItemProps) {

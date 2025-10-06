@@ -231,11 +231,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all tasks
   app.get("/api/tasks", async (req, res) => {
     try {
-      const { search, status, priority } = req.query;
+      const { search, status, priority, assignee, department, createdBy, dueDate } = req.query;
       const tasks = await storage.getTasks({
         search: search as string,
         status: status as string,
         priority: priority as string,
+        assignee: assignee as string,
+        department: department as string,
+        createdBy: createdBy as string,
+        dueDate: dueDate as string,
       });
       res.json(tasks);
     } catch (error: any) {
@@ -268,6 +272,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dueDate: new Date(req.body.dueDate),
       };
       const task = await storage.createTask(taskData);
+      
+      await storage.createTaskActivityLog({
+        taskId: task.id,
+        username: task.createdBy,
+        action: "created",
+        field: null,
+        oldValue: null,
+        newValue: null,
+      });
+      
       res.status(201).json(task);
     } catch (error: any) {
       console.error("Failed to create task:", error);
@@ -279,15 +293,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/tasks/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      const existing = await storage.getTask(id);
+      
+      if (!existing) {
+        res.status(404).send({ error: "Task not found" });
+        return;
+      }
+
       const updates = { ...req.body };
       if (updates.dueDate) {
         updates.dueDate = new Date(updates.dueDate);
       }
+      
       const task = await storage.updateTask(id, updates);
-      if (!task) {
-        res.status(404).send({ error: "Task not found" });
-        return;
+
+      for (const [field, newValue] of Object.entries(updates)) {
+        const oldValue = existing[field as keyof typeof existing];
+        if (oldValue !== newValue && field !== 'updatedAt') {
+          const username = updates.updatedBy || "System";
+          await storage.createTaskActivityLog({
+            taskId: id,
+            username,
+            action: "updated",
+            field,
+            oldValue: oldValue ? String(oldValue) : null,
+            newValue: newValue ? String(newValue) : null,
+          });
+        }
       }
+
       res.json(task);
     } catch (error: any) {
       console.error("Failed to update task:", error);
@@ -303,6 +337,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error: any) {
       console.error("Failed to delete task:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Get task comments
+  app.get("/api/tasks/:id/comments", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const comments = await storage.getTaskComments(id);
+      res.json(comments);
+    } catch (error: any) {
+      console.error("Failed to fetch task comments:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Create task comment
+  app.post("/api/tasks/:id/comments", async (req, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const comment = await storage.createTaskComment({
+        taskId,
+        username: req.body.username,
+        comment: req.body.comment,
+      });
+      res.status(201).json(comment);
+    } catch (error: any) {
+      console.error("Failed to create task comment:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Get task activity log
+  app.get("/api/tasks/:id/activity", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const activity = await storage.getTaskActivityLog(id);
+      res.json(activity);
+    } catch (error: any) {
+      console.error("Failed to fetch task activity:", error);
       res.status(500).send({ error: error.message });
     }
   });

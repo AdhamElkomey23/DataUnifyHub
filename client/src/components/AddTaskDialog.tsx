@@ -26,6 +26,8 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
     dueDate: task?.dueDate ? new Date(task.dueDate) : new Date(),
     priority: task?.priority || "medium",
     status: task?.status || "todo",
+    department: task?.department || "",
+    notes: task?.notes || "",
     relatedUrls: task?.relatedUrls || [],
     attachments: task?.attachments || [],
   });
@@ -67,6 +69,8 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
         dueDate: new Date(), 
         priority: "medium", 
         status: "todo",
+        department: "",
+        notes: "",
         relatedUrls: [],
         attachments: [],
       });
@@ -229,10 +233,43 @@ export function AddTaskDialog({ open, onOpenChange, task }: AddTaskDialogProps) 
                 <SelectContent>
                   <SelectItem value="todo">To Do</SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="waiting-for-review">Waiting for Review</SelectItem>
                   <SelectItem value="done">Done</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="department">Department (Optional)</Label>
+            <Select
+              value={formData.department || ""}
+              onValueChange={(value) => setFormData({ ...formData, department: value })}
+            >
+              <SelectTrigger data-testid="select-task-department">
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                <SelectItem value="Sales">Sales</SelectItem>
+                <SelectItem value="Operations">Operations</SelectItem>
+                <SelectItem value="Marketing">Marketing</SelectItem>
+                <SelectItem value="Accounting">Accounting</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes || ""}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Additional notes..."
+              rows={2}
+              data-testid="input-task-notes"
+            />
           </div>
 
           <div>
