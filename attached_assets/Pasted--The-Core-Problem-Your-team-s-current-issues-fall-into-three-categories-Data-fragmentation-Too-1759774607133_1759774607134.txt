@@ -1,0 +1,171 @@
+🧭 The Core Problem
+
+Your team’s current issues fall into three categories:
+
+Data fragmentation
+
+Too many Excel sheets (especially pricing ones), spread across drives and people.
+
+No single source of truth.
+
+Price updates are inconsistent or forgotten.
+
+Communication chaos
+
+Tasks are assigned on WhatsApp → easily lost or misheard.
+
+No way to track or confirm what’s done.
+
+No accountability.
+
+Information loss
+
+Contacts are stored in personal phones → impossible to centralise or find.
+
+Important supplier/partner info disappears when staff leave or change phones.
+
+🧱 The Application’s Goal
+
+To create one internal, centralised, private web app that helps your team:
+
+Organize and update company data (prices, contacts, tasks).
+
+Communicate clearly and track tasks reliably.
+
+Access everything quickly and securely from one place.
+
+⚙️ Key Sections (Modules) of the App
+1. Dashboard (Home)
+
+Quick overview of what matters today:
+
+Pending tasks
+
+Recent price updates
+
+Contacts recently added or updated
+
+Urgent notes/reminders
+
+2. Price Management
+
+✅ Goal: Replace messy Excel sheets with one clean, searchable price database.
+
+Features:
+
+Table view: Service | City | Category | Price | Updated by | Date
+
+Ability to filter by service type (e.g., Hotel, Guide, Vehicle, Entrance Ticket).
+
+Add/Edit/Delete options with change history (who updated, when).
+
+“Last updated” column to help identify outdated info.
+
+Option to export to Excel (for quoting tools or reports).
+
+3. Contacts Directory
+
+✅ Goal: Store all suppliers, drivers, hotels, partners, and team contacts in one place.
+
+Features:
+
+Table view: Name | Role | Company | WhatsApp | Email | Notes
+
+Filters by category (Hotel, Guide, Driver, Agency, etc.)
+
+Quick-call or WhatsApp buttons.
+
+Tags (e.g., “reliable”, “preferred”, “new”).
+
+Option to upload supplier contracts or rate sheets.
+
+4. Tasks / To-Do Section
+
+✅ Goal: Replace WhatsApp-based task communication with a clear, shared system.
+
+Features:
+
+Each task has:
+
+Title
+
+Description / Voice Note Upload (optional)
+
+Assigned to (team member)
+
+Deadline
+
+Priority
+
+Status (To Do / In Progress / Done)
+
+Notifications for new or updated tasks.
+
+Daily summary (e.g., “Today’s tasks” list).
+
+Comment section under each task for clarifications.
+
+5. Notes / Knowledge Base (optional but powerful)
+
+✅ Goal: Store frequently used info (e.g., SOPs, instructions, internal procedures).
+
+Examples:
+
+“How to contact a driver.”
+
+“How to issue a refund.”
+
+“Guide to creating a tour quotation.”
+
+→ This avoids repeating the same explanations on WhatsApp.
+
+6. User Management & Roles
+
+✅ Goal: Keep data safe and organized.
+
+Roles:
+
+Admin: Full access.
+
+Operations: Can edit prices and tasks.
+
+Sales: Read prices, manage tasks.
+
+Accountant: Read prices, contacts, update payment info.
+
+7. Notifications & Reminders
+
+✅ Goal: Avoid forgetting.
+
+Features:
+
+Automatic reminder before a task deadline.
+
+Weekly report summarising:
+
+Completed tasks
+
+Tasks pending
+
+Prices updated this week
+
+8. Optional Future Features
+
+Integration with WhatsApp API → send task confirmation or reminders.
+
+AI summariser → convert voice notes into written tasks.
+
+Integration with Google Drive or Sheets to import/export data.
+
+Auto price change alerts (“Price not updated for 30+ days”).
+
+🧩 Suggested Structure for MVP (First Version)
+
+To start simple on Replit, your MVP (Minimum Viable Product) should include:
+
+Module	Priority	Description
+Dashboard	✅	Basic summary of tasks, updates, and quick links
+Prices	✅	CRUD (create, read, update, delete) table
+Contacts	✅	CRUD table with filters
+Tasks	✅	Simple task assignment and status tracker
+Users	✅	Basic login system (admin + normal user)
