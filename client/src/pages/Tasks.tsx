@@ -67,6 +67,29 @@ export default function Tasks() {
     setDialogOpen(true);
   };
 
+  const handleDragStart = (e: React.DragEvent, task: Task) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("taskId", task.id.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
+    const taskId = parseInt(e.dataTransfer.getData("taskId"));
+    const task = tasks.find(t => t.id === taskId);
+    
+    if (task && task.status !== newStatus) {
+      updateTaskMutation.mutate({
+        id: taskId,
+        updates: { status: newStatus },
+      });
+    }
+  };
+
   const tasksByStatus = {
     todo: tasks.filter(t => t.status === "todo"),
     "in-progress": tasks.filter(t => t.status === "in-progress"),
@@ -149,7 +172,10 @@ export default function Tasks() {
 
       {view === "kanban" ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
+          <Card
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "todo")}
+          >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
                 <span>To Do</span>
@@ -158,9 +184,15 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 min-h-[200px]">
               {tasksByStatus.todo.map(task => (
-                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                <div 
+                  key={task.id} 
+                  onClick={() => handleTaskClick(task)}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                  className="cursor-move"
+                >
                   <TaskItem 
                     title={task.title}
                     assignee={task.assignee}
@@ -173,7 +205,10 @@ export default function Tasks() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "in-progress")}
+          >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
                 <span>In Progress</span>
@@ -182,9 +217,15 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 min-h-[200px]">
               {tasksByStatus["in-progress"].map(task => (
-                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                <div 
+                  key={task.id} 
+                  onClick={() => handleTaskClick(task)}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                  className="cursor-move"
+                >
                   <TaskItem 
                     title={task.title}
                     assignee={task.assignee}
@@ -197,7 +238,10 @@ export default function Tasks() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, "done")}
+          >
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold flex items-center justify-between">
                 <span>Done</span>
@@ -206,9 +250,15 @@ export default function Tasks() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 min-h-[200px]">
               {tasksByStatus.done.map(task => (
-                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                <div 
+                  key={task.id} 
+                  onClick={() => handleTaskClick(task)}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, task)}
+                  className="cursor-move"
+                >
                   <TaskItem 
                     title={task.title}
                     assignee={task.assignee}
