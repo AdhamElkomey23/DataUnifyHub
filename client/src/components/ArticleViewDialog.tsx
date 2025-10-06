@@ -4,12 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Calendar } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { Article } from "@shared/schema";
+import type { KnowledgeArticle } from "@shared/schema";
 
 interface ArticleViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  article?: Article;
+  article?: KnowledgeArticle;
   onEdit?: () => void;
   onDelete?: () => void;
 }

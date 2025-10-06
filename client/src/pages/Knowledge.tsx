@@ -10,7 +10,7 @@ import { AddArticleDialog } from "@/components/AddArticleDialog";
 import { ArticleViewDialog } from "@/components/ArticleViewDialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Article } from "@shared/schema";
+import type { KnowledgeArticle } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertDialog,
@@ -27,11 +27,11 @@ export default function Knowledge() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editArticle, setEditArticle] = useState<Article | undefined>();
-  const [viewArticle, setViewArticle] = useState<Article | undefined>();
+  const [editArticle, setEditArticle] = useState<KnowledgeArticle | undefined>();
+  const [viewArticle, setViewArticle] = useState<KnowledgeArticle | undefined>();
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; articleId?: number }>({ open: false });
 
-  const { data: articles = [], isLoading } = useQuery<Article[]>({
+  const { data: articles = [], isLoading } = useQuery<KnowledgeArticle[]>({
     queryKey: ["/api/articles"],
   });
 
@@ -68,7 +68,7 @@ export default function Knowledge() {
     );
   });
 
-  const handleEdit = (article: Article) => {
+  const handleEdit = (article: KnowledgeArticle) => {
     setViewArticle(undefined);
     setEditArticle(article);
     setAddDialogOpen(true);

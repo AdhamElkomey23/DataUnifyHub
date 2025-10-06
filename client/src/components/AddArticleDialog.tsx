@@ -9,17 +9,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Article, InsertArticle } from "@shared/schema";
+import type { KnowledgeArticle, InsertKnowledgeArticle } from "@shared/schema";
 
 interface AddArticleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  article?: Article;
+  article?: KnowledgeArticle;
 }
 
 export function AddArticleDialog({ open, onOpenChange, article }: AddArticleDialogProps) {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<InsertArticle>({
+  const [formData, setFormData] = useState<InsertKnowledgeArticle>({
     title: article?.title || "",
     content: article?.content || "",
     category: article?.category || "Procedures",
@@ -27,14 +27,14 @@ export function AddArticleDialog({ open, onOpenChange, article }: AddArticleDial
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: InsertArticle) => {
+    mutationFn: async (data: InsertKnowledgeArticle) => {
       if (article) {
-        return apiRequest<Article>(`/api/articles/${article.id}`, {
+        return apiRequest<KnowledgeArticle>(`/api/articles/${article.id}`, {
           method: "PUT",
           body: JSON.stringify(data),
         });
       }
-      return apiRequest<Article>("/api/articles", {
+      return apiRequest<KnowledgeArticle>("/api/articles", {
         method: "POST",
         body: JSON.stringify(data),
       });
