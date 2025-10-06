@@ -301,35 +301,38 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async deleteContact(id: number) {
+  async deleteContact(id: number): Promise<boolean> {
     await db.delete(contacts).where(eq(contacts.id, id));
-  },
+    return true;
+  }
 
-  async getArticles() {
+  async getArticles(): Promise<Article[]> {
     return await db.select().from(articles).orderBy(articles.updatedAt);
-  },
+  }
 
-  async getArticle(id: number) {
+  async getArticle(id: number): Promise<Article | undefined> {
     const result = await db.select().from(articles).where(eq(articles.id, id));
     return result[0];
-  },
+  }
 
-  async createArticle(article: InsertArticle) {
+  async createArticle(article: InsertArticle): Promise<Article> {
     const result = await db.insert(articles).values(article).returning();
     return result[0];
-  },
+  }
 
-  async updateArticle(id: number, article: Partial<InsertArticle>) {
+  async updateArticle(id: number, article: Partial<InsertArticle>): Promise<Article | undefined> {
     const result = await db.update(articles)
       .set({ ...article, updatedAt: new Date() })
       .where(eq(articles.id, id))
       .returning();
     return result[0];
-  },
+  }
 
-  async deleteArticle(id: number) {
+  async deleteArticle(id: number): Promise<boolean> {
     await db.delete(articles).where(eq(articles.id, id));
-  },
-};
+    return true;
+  }
+
+  }
 
 export const storage = new MemStorage();
