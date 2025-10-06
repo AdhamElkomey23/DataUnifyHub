@@ -1,0 +1,244 @@
+✅ TASKS PAGE — Detailed Description & Functionalities
+
+The Tasks Page is your team’s central space to create, assign, and track every task.
+It replaces WhatsApp messages, voice notes, and scattered notes with a clean, searchable, and transparent system.
+
+🎯 Main Goals
+
+Keep all tasks visible and trackable — no more forgotten WhatsApp messages.
+
+Allow each team member to choose whether they see:
+
+All company tasks, or
+
+Only their own tasks.
+
+Ensure accountability — everyone knows who’s responsible for what and when.
+
+Provide clarity through task status, deadlines, notes, and comments.
+
+Make updates easy and communication centralised.
+
+🧱 Structure and Layout
+1. Header Bar
+
+Page title: “Team Tasks”
+
+Quick actions:
+
+➕ New Task button
+
+🔍 Search box (search by title, assignee, or keyword)
+
+Filter toggle:
+
+[🔘] All Tasks
+
+[🔘] My Tasks Only
+(Toggles between showing tasks assigned to everyone vs. only the logged-in user.)
+
+2. Filters Panel (Collapsible)
+
+This allows focused views to quickly find tasks by criteria.
+
+Filter Options:
+
+Assignee (drop-down with all team members)
+
+Status: To Do / In Progress / Waiting for Review / Done / Cancelled
+
+Priority: High / Medium / Low
+
+Due Date: Today / This Week / Overdue / Custom Range
+
+Department (optional): Sales / Operations / Marketing / Accounting
+
+Created By (for admins to track who assigned the task)
+
+3. Task Table or Kanban View
+
+You can display tasks in two ways (choose depending on your app design style):
+
+Option A – Table View (Spreadsheet-like)
+
+| Task | Assigned To | Status | Priority | Due Date | Created By | Last Updated | Actions |
+|------|--------------|---------|-----------|-----------|--------------|---------------|
+| “Confirm Luxor Hotel Prices” | Zeina | In Progress | High | Oct 9, 2025 | Islam | Oct 6, 2025 | ✏️ 🗑️ 👁️ |
+
+Option B – Kanban View (Column-style)
+
+Columns: To Do → In Progress → Review → Done
+Tasks move between columns with drag-and-drop functionality.
+
+Example:
+Zeina can drag a task from “To Do” to “In Progress” once she starts working on it.
+
+4. Add / Edit Task Modal
+
+When clicking “➕ New Task” or “✏️ Edit,” a popup window appears.
+
+Form Fields:
+
+Task Title (short and clear)
+
+Description (detailed text area for instructions)
+
+Assign To: Dropdown list of users
+
+Created By: Auto-filled with the creator’s name
+
+Priority: High / Medium / Low
+
+Status: Default = “To Do”
+
+Due Date: Date picker
+
+Attachment (optional): Upload files or voice notes
+
+Notes (optional): Quick additional info
+
+Notify User: Checkbox → “Send notification to assigned person”
+
+Buttons:
+
+✅ Save
+
+❌ Cancel
+
+5. Task Detail View (Popup or Page)
+
+When you click on a task, a full detail view appears showing:
+
+Overview Section:
+
+Task Title
+
+Assigned To (with photo/avatar)
+
+Priority, Status, and Due Date
+
+Description (full text)
+
+File Attachments / Links
+
+Created By & Creation Date
+
+Comments Section:
+
+Users can leave comments, updates, or clarifications.
+
+Each comment shows the username, timestamp, and message.
+
+Example:
+
+Islam: “Please confirm this price with supplier by tomorrow.”
+Zeina: “Done, waiting for reply from Ahmed.”
+
+Activity Log:
+
+Tracks all actions on this task (edited, completed, reassigned, etc.)
+
+6. Status & Priority System
+
+Clear color-coded labels:
+
+Status	Color	Description
+To Do	Gray	Not started
+In Progress	Blue	Work ongoing
+Waiting for Review	Orange	Completed but pending check
+Done	Green	Fully completed
+Cancelled	Red	No longer needed
+Priority	Color
+High	Red
+Medium	Orange
+Low	Green
+7. User View Control (Very Important)
+
+This is the feature you specifically mentioned — every user should be able to choose whether to see:
+
+Option	Description
+All Tasks	Shows everything in the system — visible only to Admins, Managers, or users with that permission.
+My Tasks Only	Shows only tasks assigned to the logged-in user.
+
+Implementation Idea:
+
+In the top-right corner, add a toggle switch:
+
+🔘 All Tasks | 🔘 My Tasks Only
+
+The app remembers the user’s last choice when they log in next time.
+
+✅ This ensures users are not overwhelmed by irrelevant tasks but can switch to “All Tasks” when they need a bigger picture.
+
+8. Notifications & Alerts
+
+Automatic notifications make sure nothing is missed:
+
+🔔 When assigned a new task
+
+⏰ Reminder 24h before due date
+
+⚠️ Overdue task alert
+
+💬 When someone comments on your task
+
+✅ When a task you assigned is marked as done
+
+(You can later integrate this with WhatsApp or email notifications.)
+
+9. Sorting and Bulk Actions
+
+Sort by: Due date / Priority / Status / Assigned user.
+
+Bulk actions:
+
+Mark multiple tasks as done.
+
+Reassign multiple tasks to another user.
+
+Delete or archive completed ones.
+
+10. Reports / Summary (optional widget)
+
+At the top or sidebar, show quick metrics:
+
+Tasks assigned to me: 8
+
+Tasks completed this week: 5
+
+Overdue tasks: 2
+
+Pending review: 1
+
+Managers (admins) can see:
+
+Tasks per user (with completion rate %)
+
+Most active users
+
+Delayed vs. on-time completion
+
+⚙️ Technical Functionality Summary (Developer View)
+Function	Description	Type
+fetchTasks(filter)	Retrieve tasks (with user toggle: all or my own)	Backend
+createTask()	Add new task	Backend
+updateTask(id)	Edit existing task	Backend
+deleteTask(id)	Delete or archive task	Backend
+toggleTaskView(userPreference)	Switch between all/my tasks	Frontend
+filterTasks(params)	Filter by status, user, priority, etc.	Backend
+notifyUser(taskId)	Send notification when new or updated	Backend
+addComment(taskId, user, text)	Add comment	Backend
+getComments(taskId)	Retrieve comments thread	Backend
+updateStatus(taskId, status)	Move task between stages	Backend
+getSummary(userId)	Return task statistics (e.g., completed count)	Backend
+✅ Benefits for Your Team
+
+Everyone knows what they need to do — no confusion.
+
+Tasks from WhatsApp are moved into an organised, searchable system.
+
+Managers can track performance easily.
+
+Team members focus only on their own list (unless they choose to see all).
+
+Reduces miscommunication and forgotten duties.
