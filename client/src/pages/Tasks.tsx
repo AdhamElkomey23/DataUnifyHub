@@ -69,11 +69,13 @@ export default function Tasks() {
 
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("taskId", task.id.toString());
     setDraggedTaskId(task.id);
+    setIsDragging(true);
     
     // Add a slight delay to allow the drag ghost to render
     setTimeout(() => {
@@ -87,6 +89,17 @@ export default function Tasks() {
     target.style.opacity = "1";
     setDraggedTaskId(null);
     setDragOverColumn(null);
+    
+    // Delay resetting isDragging to prevent click from firing
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 100);
+  };
+
+  const handleTaskClickWrapper = (task: Task) => {
+    if (!isDragging) {
+      handleTaskClick(task);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -225,7 +238,7 @@ export default function Tasks() {
               {tasksByStatus.todo.map(task => (
                 <div 
                   key={task.id} 
-                  onClick={() => handleTaskClick(task)}
+                  onClick={() => handleTaskClickWrapper(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
                   onDragEnd={handleDragEnd}
@@ -266,7 +279,7 @@ export default function Tasks() {
               {tasksByStatus["in-progress"].map(task => (
                 <div 
                   key={task.id} 
-                  onClick={() => handleTaskClick(task)}
+                  onClick={() => handleTaskClickWrapper(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
                   onDragEnd={handleDragEnd}
@@ -307,7 +320,7 @@ export default function Tasks() {
               {tasksByStatus.done.map(task => (
                 <div 
                   key={task.id} 
-                  onClick={() => handleTaskClick(task)}
+                  onClick={() => handleTaskClickWrapper(task)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, task)}
                   onDragEnd={handleDragEnd}
