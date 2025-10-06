@@ -70,7 +70,7 @@ export function ContactCard({ id, name, role, company, category, whatsapp, email
           </div>
         )}
         
-        <div className="flex gap-2"></div>
+        <div className="flex gap-2">
           {whatsapp && (
             <Button
               variant="outline"
