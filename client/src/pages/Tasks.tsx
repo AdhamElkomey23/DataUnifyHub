@@ -1,28 +1,88 @@
 import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { TaskItem } from "@/components/TaskItem";
 import { FilterBar } from "@/components/FilterBar";
 import { Button } from "@/components/ui/button";
 import { Plus, Kanban, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-const mockTasks = [
-  { id: "1", title: "Update hotel prices for Dubai", assignee: "Sarah Chen", dueDate: "Today", priority: "high" as const, status: "in-progress" as const },
-  { id: "2", title: "Contact new driver supplier", assignee: "Mike Ross", dueDate: "Tomorrow", priority: "medium" as const, status: "todo" as const },
-  { id: "3", title: "Review supplier contracts", assignee: "Alex Kim", dueDate: "Mar 15", priority: "medium" as const, status: "todo" as const },
-  { id: "4", title: "Send quotation to client", assignee: "Sarah Chen", dueDate: "Mar 10", priority: "low" as const, status: "done" as const },
-  { id: "5", title: "Update contact database", assignee: "Mike Ross", dueDate: "Mar 20", priority: "high" as const, status: "in-progress" as const },
-  { id: "6", title: "Prepare weekly report", assignee: "Alex Kim", dueDate: "Tomorrow", priority: "medium" as const, status: "todo" as const },
-];
+import { AddTaskDialog } from "@/components/AddTaskDialog";
+import { queryClient } from "@/lib/queryClient";
+import type { Task } from "@shared/schema";
 
 export default function Tasks() {
   const [priority, setPriority] = useState("all");
   const [status, setStatus] = useState("all");
+  const [search, setSearch] = useState("");
   const [view, setView] = useState<"kanban" | "list">("kanban");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+
+  const { data: tasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks", { search, status, priority }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (status !== "all") params.append("status", status);
+      if (priority !== "all") params.append("priority", priority);
+      
+      const res = await fetch(`/api/tasks?${params.toString()}`, {
+        credentials: "include",
+      });
+      
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text()}`);
+      }
+      
+      return res.json();
+    },
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<Task> }) => {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updates),
+      });
+      
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text()}`);
+      }
+      
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+    },
+  });
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setDialogOpen(true);
+  };
+
+  const handleCreateClick = () => {
+    setSelectedTask(undefined);
+    setDialogOpen(true);
+  };
 
   const tasksByStatus = {
-    todo: mockTasks.filter(t => t.status === "todo"),
-    "in-progress": mockTasks.filter(t => t.status === "in-progress"),
-    done: mockTasks.filter(t => t.status === "done"),
+    todo: tasks.filter(t => t.status === "todo"),
+    "in-progress": tasks.filter(t => t.status === "in-progress"),
+    done: tasks.filter(t => t.status === "done"),
+  };
+
+  const formatDueDate = (date: Date | string) => {
+    const d = new Date(date);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    if (d.toDateString() === today.toDateString()) return "Today";
+    if (d.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+    
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -51,7 +111,7 @@ export default function Tasks() {
               <List className="h-4 w-4" />
             </Button>
           </div>
-          <Button data-testid="button-create-task">
+          <Button onClick={handleCreateClick} data-testid="button-create-task">
             <Plus className="h-4 w-4 mr-2" />
             Create Task
           </Button>
@@ -60,7 +120,7 @@ export default function Tasks() {
 
       <FilterBar
         searchPlaceholder="Search tasks..."
-        onSearch={(value) => console.log("Search:", value)}
+        onSearch={setSearch}
         filters={[
           {
             label: "Priority",
@@ -100,7 +160,15 @@ export default function Tasks() {
             </CardHeader>
             <CardContent className="space-y-3">
               {tasksByStatus.todo.map(task => (
-                <TaskItem key={task.id} {...task} />
+                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                  <TaskItem 
+                    title={task.title}
+                    assignee={task.assignee}
+                    dueDate={formatDueDate(task.dueDate)}
+                    priority={task.priority as "high" | "medium" | "low"}
+                    status={task.status as "todo" | "in-progress" | "done"}
+                  />
+                </div>
               ))}
             </CardContent>
           </Card>
@@ -116,7 +184,15 @@ export default function Tasks() {
             </CardHeader>
             <CardContent className="space-y-3">
               {tasksByStatus["in-progress"].map(task => (
-                <TaskItem key={task.id} {...task} />
+                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                  <TaskItem 
+                    title={task.title}
+                    assignee={task.assignee}
+                    dueDate={formatDueDate(task.dueDate)}
+                    priority={task.priority as "high" | "medium" | "low"}
+                    status={task.status as "todo" | "in-progress" | "done"}
+                  />
+                </div>
               ))}
             </CardContent>
           </Card>
@@ -132,18 +208,40 @@ export default function Tasks() {
             </CardHeader>
             <CardContent className="space-y-3">
               {tasksByStatus.done.map(task => (
-                <TaskItem key={task.id} {...task} />
+                <div key={task.id} onClick={() => handleTaskClick(task)}>
+                  <TaskItem 
+                    title={task.title}
+                    assignee={task.assignee}
+                    dueDate={formatDueDate(task.dueDate)}
+                    priority={task.priority as "high" | "medium" | "low"}
+                    status={task.status as "todo" | "in-progress" | "done"}
+                  />
+                </div>
               ))}
             </CardContent>
           </Card>
         </div>
       ) : (
         <div className="space-y-3">
-          {mockTasks.map(task => (
-            <TaskItem key={task.id} {...task} />
+          {tasks.map(task => (
+            <div key={task.id} onClick={() => handleTaskClick(task)}>
+              <TaskItem 
+                title={task.title}
+                assignee={task.assignee}
+                dueDate={formatDueDate(task.dueDate)}
+                priority={task.priority as "high" | "medium" | "low"}
+                status={task.status as "todo" | "in-progress" | "done"}
+              />
+            </div>
           ))}
         </div>
       )}
+
+      <AddTaskDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        task={selectedTask}
+      />
     </div>
   );
 }

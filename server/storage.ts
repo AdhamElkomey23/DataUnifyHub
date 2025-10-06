@@ -9,10 +9,13 @@ import {
   type InsertContact,
   type KnowledgeArticle,
   type InsertKnowledgeArticle,
+  type Task,
+  type InsertTask,
   prices,
   priceHistory,
   contacts,
-  knowledgeArticles
+  knowledgeArticles,
+  tasks
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -48,6 +51,12 @@ export interface IStorage {
   createArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle>;
   updateArticle(id: number, article: Partial<InsertKnowledgeArticle>): Promise<KnowledgeArticle | undefined>;
   deleteArticle(id: number): Promise<boolean>;
+
+  getTasks(filters?: { search?: string; status?: string; priority?: string }): Promise<Task[]>;
+  getTask(id: number): Promise<Task | undefined>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -332,6 +341,53 @@ export class MemStorage implements IStorage {
 
   async deleteArticle(id: number): Promise<boolean> {
     await db.delete(knowledgeArticles).where(eq(knowledgeArticles.id, id));
+    return true;
+  }
+
+  async getTasks(filters?: { search?: string; status?: string; priority?: string }): Promise<Task[]> {
+    let query = db.select().from(tasks);
+    const result = await query;
+    
+    let filteredTasks = result;
+    
+    if (filters?.search) {
+      const search = filters.search.toLowerCase();
+      filteredTasks = filteredTasks.filter(
+        (t) => t.title.toLowerCase().includes(search) || t.assignee.toLowerCase().includes(search)
+      );
+    }
+    
+    if (filters?.status && filters.status !== "all") {
+      filteredTasks = filteredTasks.filter((t) => t.status === filters.status);
+    }
+    
+    if (filters?.priority && filters.priority !== "all") {
+      filteredTasks = filteredTasks.filter((t) => t.priority === filters.priority);
+    }
+    
+    return filteredTasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getTask(id: number): Promise<Task | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id));
+    return result[0];
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const result = await db.insert(tasks).values(task).returning();
+    return result[0];
+  }
+
+  async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await db.update(tasks)
+      .set({ ...task, updatedAt: new Date() })
+      .where(eq(tasks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    await db.delete(tasks).where(eq(tasks.id, id));
     return true;
   }
 }

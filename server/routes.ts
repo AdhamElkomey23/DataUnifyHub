@@ -228,6 +228,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all tasks
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const { search, status, priority } = req.query;
+      const tasks = await storage.getTasks({
+        search: search as string,
+        status: status as string,
+        priority: priority as string,
+      });
+      res.json(tasks);
+    } catch (error: any) {
+      console.error("Failed to fetch tasks:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Get single task
+  app.get("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.getTask(id);
+      if (!task) {
+        res.status(404).send({ error: "Task not found" });
+        return;
+      }
+      res.json(task);
+    } catch (error: any) {
+      console.error("Failed to fetch task:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Create task
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const task = await storage.createTask(req.body);
+      res.status(201).json(task);
+    } catch (error: any) {
+      console.error("Failed to create task:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Update task
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const task = await storage.updateTask(id, req.body);
+      if (!task) {
+        res.status(404).send({ error: "Task not found" });
+        return;
+      }
+      res.json(task);
+    } catch (error: any) {
+      console.error("Failed to update task:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
+  // Delete task
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteTask(id);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Failed to delete task:", error);
+      res.status(500).send({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
