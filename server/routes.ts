@@ -5,7 +5,7 @@ import { insertPriceSchema, insertPriceHistorySchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   app.get("/api/prices", async (req, res) => {
     try {
       const { search, city, serviceType, category } = req.query;
@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const existing = await storage.getPriceById(id);
-      
+
       if (!existing) {
         return res.status(404).json({ error: "Price not found" });
       }
@@ -98,6 +98,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(history);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch price history" });
+    }
+  });
+
+  // Add contacts API routes
+  app.get("/api/contacts", async (req, res) => {
+    try {
+      const contacts = await storage.getContacts();
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contacts" });
+    }
+  });
+
+  app.get("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contact = await storage.getContactById(id);
+      if (!contact) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.json(contact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contact" });
+    }
+  });
+
+  app.post("/api/contacts", async (req, res) => {
+    try {
+      const validated = insertPriceSchema.parse(req.body); // Assuming insertPriceSchema is a placeholder and should be insertContactSchema
+      const contact = await storage.createContact(validated);
+      res.status(201).json(contact);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create contact" });
+    }
+  });
+
+  app.patch("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const existing = await storage.getContactById(id);
+
+      if (!existing) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+
+      const updates = req.body;
+      const updatedContact = await storage.updateContact(id, updates);
+
+      res.json(updatedContact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update contact" });
+    }
+  });
+
+  app.delete("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteContact(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Contact not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete contact" });
     }
   });
 

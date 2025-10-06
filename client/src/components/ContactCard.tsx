@@ -1,12 +1,13 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { SiWhatsapp } from "react-icons/si";
 
 interface ContactCardProps {
-  id: string;
+  id: number;
   name: string;
   role: string;
   company: string;
@@ -17,6 +18,20 @@ interface ContactCardProps {
 }
 
 export function ContactCard({ id, name, role, company, category, whatsapp, email, tags }: ContactCardProps) {
+  const handleWhatsApp = () => {
+    if (whatsapp) {
+      // Remove any non-numeric characters except +
+      const cleanNumber = whatsapp.replace(/[^\d+]/g, '');
+      window.open(`https://wa.me/${cleanNumber}`, '_blank');
+    }
+  };
+
+  const handleEmail = () => {
+    if (email) {
+      window.open(`mailto:${email}`, '_blank');
+    }
+  };
+
   return (
     <Card className="hover-elevate" data-testid={`card-contact-${id}`}>
       <CardContent className="p-4">
@@ -46,7 +61,7 @@ export function ContactCard({ id, name, role, company, category, whatsapp, email
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => console.log('WhatsApp:', whatsapp)}
+              onClick={handleWhatsApp}
               data-testid={`button-whatsapp-${id}`}
             >
               <SiWhatsapp className="h-4 w-4" />
@@ -57,7 +72,7 @@ export function ContactCard({ id, name, role, company, category, whatsapp, email
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => console.log('Email:', email)}
+              onClick={handleEmail}
               data-testid={`button-email-${id}`}
             >
               <Mail className="h-4 w-4" />
