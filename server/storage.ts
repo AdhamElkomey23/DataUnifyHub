@@ -5,6 +5,8 @@ import {
   type InsertPrice,
   type PriceHistory,
   type InsertPriceHistory,
+  type Contact,
+  type InsertContact,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -26,21 +28,31 @@ export interface IStorage {
   
   getPriceHistory(priceId: number): Promise<PriceHistory[]>;
   createPriceHistory(history: InsertPriceHistory): Promise<PriceHistory>;
+  
+  getContacts(): Promise<Contact[]>;
+  getContactById(id: number): Promise<Contact | undefined>;
+  createContact(contact: InsertContact): Promise<Contact>;
+  updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
+  deleteContact(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private prices: Map<number, Price>;
   private priceHistory: Map<number, PriceHistory>;
+  private contacts: Map<number, Contact>;
   private priceIdCounter: number;
   private historyIdCounter: number;
+  private contactIdCounter: number;
 
   constructor() {
     this.users = new Map();
     this.prices = new Map();
     this.priceHistory = new Map();
+    this.contacts = new Map();
     this.priceIdCounter = 1;
     this.historyIdCounter = 1;
+    this.contactIdCounter = 1;
     
     this.seedInitialData();
   }
@@ -231,6 +243,54 @@ export class MemStorage implements IStorage {
     };
     this.priceHistory.set(id, history);
     return history;
+  }
+
+  async getContacts(): Promise<Contact[]> {
+    return Array.from(this.contacts.values())
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async getContactById(id: number): Promise<Contact | undefined> {
+    return this.contacts.get(id);
+  }
+
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const id = this.contactIdCounter++;
+    const now = new Date();
+    
+    const contact: Contact = {
+      id,
+      name: insertContact.name,
+      role: insertContact.role,
+      company: insertContact.company,
+      category: insertContact.category,
+      whatsapp: insertContact.whatsapp || null,
+      email: insertContact.email || null,
+      tags: insertContact.tags || null,
+      notes: insertContact.notes || null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.contacts.set(id, contact);
+    return contact;
+  }
+
+  async updateContact(id: number, updates: Partial<InsertContact>): Promise<Contact | undefined> {
+    const existing = this.contacts.get(id);
+    if (!existing) return undefined;
+
+    const updated: Contact = {
+      ...existing,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.contacts.set(id, updated);
+    return updated;
+  }
+
+  async deleteContact(id: number): Promise<boolean> {
+    return this.contacts.delete(id);
   }
 }
 

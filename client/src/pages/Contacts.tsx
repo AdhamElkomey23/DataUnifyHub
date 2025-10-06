@@ -148,7 +148,7 @@ export default function Contacts() {
                 Add Contact
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Contact</DialogTitle>
                 <DialogDescription>Add a new contact to your directory</DialogDescription>

@@ -126,8 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/contacts", async (req, res) => {
     try {
-      const validated = insertPriceSchema.parse(req.body); // Assuming insertPriceSchema is a placeholder and should be insertContactSchema
-      const contact = await storage.createContact(validated);
+      const contact = await storage.createContact(req.body);
       res.status(201).json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {
