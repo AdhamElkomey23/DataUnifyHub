@@ -1,0 +1,219 @@
+💰 PRICES PAGE — Detailed Description & Functionalities
+
+The Prices Page is the central database of all your company’s service rates — replacing all scattered Excel sheets.
+It ensures everyone (sales, operations, accounting, etc.) works with the same, updated, and verified data.
+
+🎯 Main Goals
+
+Centralize all prices for every service in one clean interface.
+
+Prevent confusion caused by outdated or duplicated Excel sheets.
+
+Allow fast searching, filtering, and updating by any authorized user.
+
+Track every change with version history (so you always know who changed what and when).
+
+Enable easy export or integration with quotations or other internal tools.
+
+🧱 Structure and Layout
+1. Header Bar
+
+Page Title: “Service Prices Database”
+
+Global Search Bar (search by city, service, or supplier)
+
+“+ Add New Price” button
+
+Filters section (collapsible)
+
+2. Filter & Search Panel
+
+This section helps your team find prices instantly.
+
+Filter Options:
+
+City / Destination (e.g., Cairo, Luxor, Aswan, Siwa, Hurghada)
+
+Service Type
+
+Hotel
+
+Nile Cruise
+
+Transportation
+
+Guide
+
+Entrance Ticket
+
+Activity / Excursion
+
+Meal / Restaurant
+
+Add-on
+
+Category / Class
+
+e.g., Standard, Deluxe, Luxury
+
+Supplier Name
+
+Last Updated
+
+Filter by last update date (e.g., show only outdated prices).
+
+Search Suggestions:
+As you type, it suggests:
+
+“Aswan + Dahabiya,” “Luxor + Entrance Ticket,” “Guide Cairo,” etc.
+
+3. Price Table View
+
+This is the core of the page — a smart, Excel-like grid but cleaner and connected to your database.
+
+Main Columns:
+
+Column	Description
+#	Auto-incremented ID
+Service Name	The name of the item (e.g., “Philae Temple Entrance Ticket”, “Toyota Hiace 2024 – Full Day”)
+City / Destination	Location of the service
+Category / Type	(Hotel / Vehicle / Guide / Cruise / etc.)
+Supplier / Partner	Company or contact providing the service
+Cost Price	Your net price
+Selling Price	Your public or quoted price
+Currency	e.g., EGP, USD, EUR
+Updated By	Username of who last edited it
+Last Updated Date	Automatic timestamp
+Notes / Conditions	(e.g., “Includes parking & driver tip”, “Only valid till Dec 2025”)
+Actions	Edit / Delete / History icons
+
+💡 You can later allow inline editing (like Google Sheets) or a popup modal for each item.
+
+4. Add / Edit Price Modal
+
+When clicking “Add New Price” or “Edit”, a popup form appears.
+
+Form Fields:
+
+Service Type: Dropdown (Hotel, Guide, Transport, etc.)
+
+Service Name: Free text input
+
+City / Destination: Dropdown
+
+Supplier / Partner: Dropdown or +Add New Supplier (opens contact form)
+
+Cost Price: Numeric field
+
+Selling Price: Numeric field
+
+Currency: Dropdown (USD / EGP / EUR)
+
+Effective Date: Date picker
+
+Expiry Date (optional): Date picker
+
+Notes: Text area for conditions or details (e.g., “Price includes taxes but not tips.”)
+
+Buttons:
+
+✅ Save
+
+❌ Cancel
+
+Smart Validation:
+
+Prevent saving if required fields are missing.
+
+Prevent duplicate entries (same service + same supplier + same date).
+
+5. Price History & Logs
+
+Every time someone edits or deletes a price:
+
+The old value is stored automatically.
+
+You can view the change history.
+
+Displayed info in the log:
+
+Date	User	Old Value	New Value	Action
+06 Oct 2025	Zeina	80 USD	85 USD	Edit
+
+✅ This avoids confusion and gives transparency.
+
+6. Outdated Price Warning
+
+If a price was last updated more than 90 days ago, a red badge or ⚠️ symbol appears beside it.
+
+Example: “⚠️ Not updated since July 2024.”
+
+You can also add a “Needs Review” filter to help managers quickly see all old prices.
+
+7. Export & Import Functions
+
+Export to Excel / CSV:
+One click to download the table with filters applied.
+(Useful for sharing price sheets with suppliers or accountants.)
+
+Import Prices:
+Upload an Excel/CSV file → system checks duplicates and shows what will be added or updated.
+(Optional for later — can be Phase 2.)
+
+8. Permissions & Access Control
+
+Each user’s access depends on their role.
+
+Role	Permissions
+Admin	Full access (view, edit, delete, add)
+Operations	Add & edit
+Sales	View only
+Accountant	View only
+9. Price Comparison (Phase 2 Feature)
+
+You can later allow the system to:
+
+Compare supplier prices for the same service.
+
+Highlight the lowest or preferred supplier.
+
+Example:
+“Aswan Transfer – Toyota Hiace”
+Supplier A: 950 EGP | Supplier B: 900 EGP → Highlight B as cheaper.
+
+10. Audit Summary (optional widget)
+
+At the bottom or sidebar, show key insights:
+
+Total active services: 427
+
+Prices updated this month: 32
+
+Prices needing review: 15
+
+Most updated by: Zeina (12 updates)
+
+🧩 Technical Functionality Summary (for Developer)
+Function	Description	Type
+fetchPrices()	Loads all price records from DB	Backend
+filterPrices(params)	Filters table by city/service/supplier	Backend
+addPrice()	Adds new price to DB	Backend
+updatePrice(id)	Updates selected price record	Backend
+deletePrice(id)	Removes a price (soft delete recommended)	Backend
+logChange(user, oldValue, newValue)	Records edit history	Backend
+exportPrices(format)	Downloads filtered results	Frontend
+renderPriceTable()	Displays data dynamically	Frontend
+alertOutdatedPrices()	Flags prices older than X days	Frontend
+✅ Benefits for Your Team
+
+No more searching in Excel or WhatsApp.
+
+Everyone works with one version of the truth.
+
+Easy to update prices in real-time.
+
+Managers can track who changed what.
+
+Prevents quoting customers with outdated prices.
+
+Builds a foundation for your future quotation automation tool.

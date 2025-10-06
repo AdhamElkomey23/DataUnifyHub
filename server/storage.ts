@@ -1,20 +1,142 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { 
+  type User, 
+  type InsertUser,
+  type Price,
+  type InsertPrice,
+  type PriceHistory,
+  type InsertPriceHistory,
+} from "@shared/schema";
 import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  getPrices(filters?: {
+    search?: string;
+    city?: string;
+    serviceType?: string;
+    category?: string;
+    supplier?: string;
+  }): Promise<Price[]>;
+  getPriceById(id: number): Promise<Price | undefined>;
+  createPrice(price: InsertPrice): Promise<Price>;
+  updatePrice(id: number, price: Partial<InsertPrice>): Promise<Price | undefined>;
+  deletePrice(id: number): Promise<boolean>;
+  
+  getPriceHistory(priceId: number): Promise<PriceHistory[]>;
+  createPriceHistory(history: InsertPriceHistory): Promise<PriceHistory>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private prices: Map<number, Price>;
+  private priceHistory: Map<number, PriceHistory>;
+  private priceIdCounter: number;
+  private historyIdCounter: number;
 
   constructor() {
     this.users = new Map();
+    this.prices = new Map();
+    this.priceHistory = new Map();
+    this.priceIdCounter = 1;
+    this.historyIdCounter = 1;
+    
+    this.seedInitialData();
+  }
+
+  private seedInitialData() {
+    const now = new Date();
+    const daysAgo = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    
+    const initialPrices: Omit<Price, 'id'>[] = [
+      {
+        serviceName: "Luxury Hotel - 5 Star",
+        serviceType: "Hotel",
+        city: "Dubai",
+        category: "Luxury",
+        supplier: "Luxury Resorts Dubai",
+        costPrice: "400.00",
+        sellingPrice: "450.00",
+        currency: "USD",
+        effectiveDate: daysAgo(10),
+        expiryDate: null,
+        notes: "Includes breakfast and airport transfer",
+        updatedBy: "Sarah Chen",
+        updatedAt: daysAgo(2),
+        createdAt: daysAgo(10),
+      },
+      {
+        serviceName: "Private Tour Guide - Full Day",
+        serviceType: "Guide",
+        city: "Cairo",
+        category: "Standard",
+        supplier: "Cairo Tours Ltd",
+        costPrice: "100.00",
+        sellingPrice: "120.00",
+        currency: "USD",
+        effectiveDate: daysAgo(5),
+        expiryDate: null,
+        notes: "English speaking, licensed guide",
+        updatedBy: "Mike Ross",
+        updatedAt: daysAgo(1),
+        createdAt: daysAgo(5),
+      },
+      {
+        serviceName: "Luxury Vehicle Rental - Toyota Hiace",
+        serviceType: "Vehicle",
+        city: "Dubai",
+        category: "Deluxe",
+        supplier: "Premium Transport",
+        costPrice: "250.00",
+        sellingPrice: "280.00",
+        currency: "USD",
+        effectiveDate: daysAgo(8),
+        expiryDate: null,
+        notes: "Includes driver and fuel, 8 hours",
+        updatedBy: "Alex Kim",
+        updatedAt: daysAgo(3),
+        createdAt: daysAgo(8),
+      },
+      {
+        serviceName: "Philae Temple Entrance Ticket",
+        serviceType: "Ticket",
+        city: "Aswan",
+        category: "Standard",
+        supplier: "Ministry of Tourism",
+        costPrice: "40.00",
+        sellingPrice: "45.00",
+        currency: "USD",
+        effectiveDate: daysAgo(100),
+        expiryDate: null,
+        notes: "Price may change seasonally",
+        updatedBy: "Sarah Chen",
+        updatedAt: daysAgo(95),
+        createdAt: daysAgo(100),
+      },
+      {
+        serviceName: "Nile Cruise - 3 Nights Luxor to Aswan",
+        serviceType: "Cruise",
+        city: "Luxor",
+        category: "Luxury",
+        supplier: "Nile Cruises International",
+        costPrice: "650.00",
+        sellingPrice: "750.00",
+        currency: "USD",
+        effectiveDate: daysAgo(15),
+        expiryDate: null,
+        notes: "Full board, guided excursions included",
+        updatedBy: "Mike Ross",
+        updatedAt: daysAgo(4),
+        createdAt: daysAgo(15),
+      },
+    ];
+
+    initialPrices.forEach((price) => {
+      const id = this.priceIdCounter++;
+      this.prices.set(id, { ...price, id });
+    });
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -29,9 +151,119 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { ...insertUser, id, role: "sales" };
     this.users.set(id, user);
     return user;
+  }
+
+  async getPrices(filters?: {
+    search?: string;
+    city?: string;
+    serviceType?: string;
+    category?: string;
+    supplier?: string;
+  }): Promise<Price[]> {
+    let prices = Array.from(this.prices.values());
+
+    if (filters) {
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        prices = prices.filter(
+          (p) =>
+            p.serviceName.toLowerCase().includes(search) ||
+            p.city.toLowerCase().includes(search) ||
+            p.supplier.toLowerCase().includes(search)
+        );
+      }
+
+      if (filters.city && filters.city !== "all") {
+        prices = prices.filter((p) => p.city.toLowerCase() === filters.city!.toLowerCase());
+      }
+
+      if (filters.serviceType && filters.serviceType !== "all") {
+        prices = prices.filter((p) => p.serviceType.toLowerCase() === filters.serviceType!.toLowerCase());
+      }
+
+      if (filters.category && filters.category !== "all") {
+        prices = prices.filter((p) => p.category.toLowerCase() === filters.category!.toLowerCase());
+      }
+
+      if (filters.supplier && filters.supplier !== "all") {
+        prices = prices.filter((p) => p.supplier === filters.supplier);
+      }
+    }
+
+    return prices.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async getPriceById(id: number): Promise<Price | undefined> {
+    return this.prices.get(id);
+  }
+
+  async createPrice(insertPrice: InsertPrice): Promise<Price> {
+    const id = this.priceIdCounter++;
+    const now = new Date();
+    const effectiveDate = insertPrice.effectiveDate ? new Date(insertPrice.effectiveDate) : now;
+    const expiryDate = insertPrice.expiryDate ? new Date(insertPrice.expiryDate) : null;
+    
+    const price: Price = {
+      id,
+      serviceName: insertPrice.serviceName!,
+      serviceType: insertPrice.serviceType!,
+      city: insertPrice.city!,
+      category: insertPrice.category!,
+      supplier: insertPrice.supplier!,
+      costPrice: insertPrice.costPrice!,
+      sellingPrice: insertPrice.sellingPrice!,
+      currency: insertPrice.currency || "USD",
+      effectiveDate,
+      expiryDate,
+      notes: insertPrice.notes || null,
+      updatedBy: insertPrice.updatedBy!,
+      updatedAt: now,
+      createdAt: now,
+    };
+    this.prices.set(id, price);
+    return price;
+  }
+
+  async updatePrice(id: number, updates: Partial<InsertPrice>): Promise<Price | undefined> {
+    const existing = this.prices.get(id);
+    if (!existing) return undefined;
+
+    const updated: Price = {
+      ...existing,
+      ...updates,
+      id,
+      updatedAt: new Date(),
+    };
+    this.prices.set(id, updated);
+    return updated;
+  }
+
+  async deletePrice(id: number): Promise<boolean> {
+    return this.prices.delete(id);
+  }
+
+  async getPriceHistory(priceId: number): Promise<PriceHistory[]> {
+    return Array.from(this.priceHistory.values())
+      .filter((h) => h.priceId === priceId)
+      .sort((a, b) => b.changedAt.getTime() - a.changedAt.getTime());
+  }
+
+  async createPriceHistory(insertHistory: InsertPriceHistory): Promise<PriceHistory> {
+    const id = this.historyIdCounter++;
+    const history: PriceHistory = {
+      id,
+      priceId: insertHistory.priceId,
+      field: insertHistory.field,
+      oldValue: insertHistory.oldValue,
+      newValue: insertHistory.newValue,
+      changedBy: insertHistory.changedBy,
+      changedAt: new Date(),
+    };
+    this.priceHistory.set(id, history);
+    return history;
   }
 }
 
